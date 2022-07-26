@@ -59,6 +59,7 @@ def define_pyobjects_system(module: ir.Module):
     ssizeobjargproc = ir.FunctionType(int64, [pyobject_p, int64])
     objobjproc = ir.FunctionType(int64, [pyobject_p, pyobject_p])
     objobjargproc = ir.FunctionType(int64, [pyobject_p, pyobject_p, pyobject_p])
+    pyobj_function = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p])
     sendfunc_result = int8  # one of 0 (Return), -1 (Error), 1 (Next)
     sendfunc = ir.FunctionType(sendfunc_result, [pyobject_p, pyobject_p, pyobject_p])
     inqury_result = int8
@@ -177,6 +178,13 @@ def define_pyobjects_system(module: ir.Module):
     pybufferprocs_p = pybufferprocs.as_pointer()
 
     pymethoddef = module.context.get_identified_type("PyMethodDef")
+    pymethoddef.set_body(
+        char_p,          # ml_name;   /* The name of the built-in function/method */
+        pyobj_function,  # ml_meth;    /* The C function that implements it */
+        int8,            # ml_flags;   /* Combination of METH_xxx flags, which mostly
+                         #          describe the args expected by the C func */
+        char_p           # ml_doc;    /* The __doc__ attribute, or NULL */
+    )
     pymethoddef_p = pymethoddef.as_pointer()
 
     pymemberdef = module.context.get_identified_type("PyMemberDef")
