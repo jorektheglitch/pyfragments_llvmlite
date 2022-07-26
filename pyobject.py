@@ -10,6 +10,8 @@ int64 = ir.IntType(64)
 char = ir.IntType(8)
 char_p = char.as_pointer()
 size_t = ir.IntType(64)
+ssize_t = ir.IntType(64)
+ssize_t_p = ssize_t.as_pointer()
 
 
 def define_pyobjects_system(module: ir.Module):
@@ -17,9 +19,11 @@ def define_pyobjects_system(module: ir.Module):
     pyobject = module.context.get_identified_type("PyObject")
     pyvarobject = module.context.get_identified_type("PyVarObject")
     pytypeobject = module.context.get_identified_type("PyTypeObject")
+    pybuffer = module.context.get_identified_type("Py_buffer")
 
     pyobject_p = pyobject.as_pointer()
     pytypeobject_p = pytypeobject.as_pointer()
+    pybuffer_p = pybuffer.as_pointer()
 
     ob_refcount = int64
     ob_type = pytypeobject.as_pointer()
@@ -32,6 +36,20 @@ def define_pyobjects_system(module: ir.Module):
     pyvarobject.set_body(
         ob_base,
         ob_size
+    )
+    pybuffer.set_body(
+        void_p,      # buf;
+        pyobject_p,  # obj;        /* owned reference */
+        ssize_t,     # len;
+        ssize_t,     # itemsize;  /* This is Py_ssize_t so it can be
+                     #              pointed to by strides in simple case.*/
+        int8,        # readonly;
+        int8,        # ndim;
+        char_p,      # format;
+        ssize_t_p,   # shape;
+        ssize_t_p,   # strides;
+        ssize_t_p,   # suboffsets;
+        void_p,      # internal;
     )
 
     unaryfunc = ir.FunctionType(pyobject_p, [pyobject_p])
@@ -68,6 +86,8 @@ def define_pyobjects_system(module: ir.Module):
     pyobject_p_arr_p = pyobject_p.as_pointer()
     vectorcallfunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p_arr_p, int64, pyobject_p])
 
+    getbufferproc = ir.FunctionType(int8, [pyobject_p, pybuffer_p, int8])
+    releasebufferproc = ir.FunctionType(void, [pyobject_p, pybuffer_p])
 
     pyasyncmethods = module.context.get_identified_type("PyAsyncMethods")
     pyasyncmethods.set_body(
