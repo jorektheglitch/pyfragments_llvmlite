@@ -188,6 +188,13 @@ def define_pyobjects_system(module: ir.Module):
     pymethoddef_p = pymethoddef.as_pointer()
 
     pymemberdef = module.context.get_identified_type("PyMemberDef")
+    pymemberdef.set_body(
+        char_p,  # name
+        int8,    # type
+        int64,   # offset
+        int8,    # flags
+        char_p,  # doc
+    )
     pymemberdef_p = pymemberdef.as_pointer()
 
     pygetsetdef = module.context.get_identified_type("PyGetSetDef")
