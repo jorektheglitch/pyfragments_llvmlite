@@ -66,7 +66,6 @@ def define_pyobjects_system(module: ir.Module):
     inqury_result = int8
     inquiry = ir.FunctionType(inqury_result, [pyobject_p])
     destructor = ir.FunctionType(ir.VoidType(), [pyobject_p])
-    printfunc = ir.FunctionType()
     reprfunc = ir.FunctionType(pyobject_p, [pyobject_p])
     hashfunc = ir.FunctionType(ssize_t, [pyobject_p])
     getattrfunc = ir.FunctionType(pyobject_p, [pyobject_p, char_p])
@@ -218,7 +217,7 @@ def define_pyobjects_system(module: ir.Module):
 
         # Methods to implement standard operations
         destructor,           # tp_dealloc
-        printfunc,            # tp_print
+        ssize_t,              # tp_vectorcall_offset
         getattrfunc,          # tp_getattr
         setattrfunc,          # tp_setattr
         pyasyncmethods_p,     # tp_as_async
