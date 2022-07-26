@@ -2,8 +2,6 @@ from operator import mod
 from llvmlite import ir
 
 
-void = ir.VoidType()
-void_p = void.as_pointer()
 int8 = ir.IntType(8)
 int32 = ir.IntType(32)
 int64 = ir.IntType(64)
@@ -12,6 +10,9 @@ char_p = char.as_pointer()
 size_t = ir.IntType(64)
 ssize_t = ir.IntType(64)
 ssize_t_p = ssize_t.as_pointer()
+
+void = ir.VoidType()
+void_p = int8.as_pointer()
 
 
 def define_pyobjects_system(module: ir.Module):
