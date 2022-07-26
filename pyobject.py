@@ -7,8 +7,9 @@ int32 = ir.IntType(32)
 int64 = ir.IntType(64)
 char = ir.IntType(8)
 char_p = char.as_pointer()
-size_t = ir.IntType(64)
-ssize_t = ir.IntType(64)
+size = ir.IntType(1)
+size_t = size.as_pointer()
+ssize_t = size.as_pointer()
 ssize_t_p = ssize_t.as_pointer()
 
 void = ir.VoidType()
@@ -56,8 +57,8 @@ def define_pyobjects_system(module: ir.Module):
     unaryfunc = ir.FunctionType(pyobject_p, [pyobject_p])
     binaryfunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p])
     ternaryfunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, pyobject_p])
-    ssizeargfunc = ir.FunctionType(pyobject_p, [pyobject_p, int64])
-    ssizeobjargproc = ir.FunctionType(int64, [pyobject_p, int64])
+    ssizeargfunc = ir.FunctionType(pyobject_p, [pyobject_p, ssize_t])
+    ssizeobjargproc = ir.FunctionType(int64, [pyobject_p, ssize_t])
     objobjproc = ir.FunctionType(int64, [pyobject_p, pyobject_p])
     objobjargproc = ir.FunctionType(int64, [pyobject_p, pyobject_p, pyobject_p])
     pyobj_function = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p])
@@ -65,7 +66,7 @@ def define_pyobjects_system(module: ir.Module):
     sendfunc = ir.FunctionType(sendfunc_result, [pyobject_p, pyobject_p, pyobject_p])
     inqury_result = int8
     inquiry = ir.FunctionType(inqury_result, [pyobject_p])
-    destructor = ir.FunctionType(ir.VoidType(), [pyobject_p])
+    destructor = ir.FunctionType(void, [pyobject_p])
     reprfunc = ir.FunctionType(pyobject_p, [pyobject_p])
     hashfunc = ir.FunctionType(ssize_t, [pyobject_p])
     getattrfunc = ir.FunctionType(pyobject_p, [pyobject_p, char_p])
@@ -79,16 +80,16 @@ def define_pyobjects_system(module: ir.Module):
     richcmpfunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, int8])
     getiterfunc = ir.FunctionType(pyobject_p, [pyobject_p])
     iternextfunc = ir.FunctionType(pyobject_p, [pyobject_p])
-    lenfunc = ir.FunctionType(int64, [pyobject_p])
+    lenfunc = ir.FunctionType(ssize_t, [pyobject_p])
     descrgetfunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, pyobject_p])
     descrsetfunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, pyobject_p])
     initproc = ir.FunctionType(int8, [pyobject_p, pyobject_p, pyobject_p])  # return 0 if ok -1 if exception
-    allocfunc = ir.FunctionType(pyobject_p, [pytypeobject_p, int64])
+    allocfunc = ir.FunctionType(pyobject_p, [pytypeobject_p, ssize_t])
     newfunc = ir.FunctionType(pyobject_p, [pytypeobject_p, pyobject_p, pyobject_p])
     freefunc = ir.FunctionType(void, [void_p])
 
     pyobject_p_arr_p = pyobject_p.as_pointer()
-    vectorcallfunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p_arr_p, int64, pyobject_p])
+    vectorcallfunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p_arr_p, ssize_t, pyobject_p])
 
     getbufferproc = ir.FunctionType(int8, [pyobject_p, pybuffer_p, int8])
     releasebufferproc = ir.FunctionType(void, [pyobject_p, pybuffer_p])
@@ -193,7 +194,7 @@ def define_pyobjects_system(module: ir.Module):
     pymemberdef.set_body(
         char_p,  # name
         int8,    # type
-        int64,   # offset
+        ssize_t,  # offset
         int8,    # flags
         char_p,  # doc
     )
@@ -212,8 +213,8 @@ def define_pyobjects_system(module: ir.Module):
     pytypeobject.set_body(
         ob_base,
         char_p,               # tp_name
-        int64,                # tp_basicsize
-        int64,                # tp_itemsize
+        ssize_t,              # tp_basicsize
+        ssize_t,              # tp_itemsize
 
         # Methods to implement standard operations
         destructor,           # tp_dealloc
@@ -243,7 +244,7 @@ def define_pyobjects_system(module: ir.Module):
         traverseproc,         # tp_traverse
         inquiry,              # tp_clear
         richcmpfunc,          # tp_richcompare
-        int64,                # tp_weaklistoffset
+        ssize_t,              # tp_weaklistoffset
 
         getiterfunc,          # tp_iter
         iternextfunc,         # tp_iternext
@@ -255,7 +256,7 @@ def define_pyobjects_system(module: ir.Module):
         pyobject_p,           # tp_dict
         descrgetfunc,         # tp_descrget
         descrsetfunc,         # tp_descrset
-        int64,                # tp_dictoffset
+        ssize_t,              # tp_dictoffset
         initproc,             # tp_init
         allocfunc,            # tp_alloc
         newfunc,              # tp_new
