@@ -72,6 +72,8 @@ def define_pyobjects_system(module: ir.Module):
     getattrofunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p])
     setattrfunc = ir.FunctionType(int8, [pyobject_p, char_p, pyobject_p])
     setattrofunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p])
+    getter = ir.FunctionType(pyobject_p, [pyobject_p, void_p])
+    setter = ir.FunctionType(int8, [pyobject_p, pyobject_p, void_p])
     visitproc = ir.FunctionType(int64, [pyobject_p, void_p])  # 
     traverseproc = ir.FunctionType(int64, [pyobject_p, visitproc, void_p])
     richcmpfunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, int8])
@@ -198,6 +200,13 @@ def define_pyobjects_system(module: ir.Module):
     pymemberdef_p = pymemberdef.as_pointer()
 
     pygetsetdef = module.context.get_identified_type("PyGetSetDef")
+    pygetsetdef.set_body(
+        char_p,  # name
+        getter,  # get
+        setter,  # set
+        char_p,  # doc
+        void_p,  # closure - optional function pointer 
+    )
     pygetsetdef_p = pygetsetdef.as_pointer()
 
     pytypeobject.set_body(
