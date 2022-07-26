@@ -104,7 +104,7 @@ def define_pyobjects_system(module: ir.Module):
     pyasyncmethods_p = pyasyncmethods.as_pointer()
 
     pynumbermethods = module.context.get_identified_type("PyNumberMethods")
-    pyasyncmethods.set_body(
+    pynumbermethods.set_body(
         binaryfunc,   # nb_add;
         binaryfunc,   # nb_subtract;
         binaryfunc,   # nb_multiply;
