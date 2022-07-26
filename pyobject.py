@@ -27,7 +27,7 @@ def define_pyobjects_system(module: ir.Module):
     pytypeobject_p = pytypeobject.as_pointer()
     pybuffer_p = pybuffer.as_pointer()
 
-    ob_refcount = int64
+    ob_refcount = ssize_t
     ob_type = pytypeobject.as_pointer()
     pyobject.set_body(
         ob_refcount,
