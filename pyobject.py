@@ -66,6 +66,7 @@ def define_pyobjects_system(module: ir.Module):
     destructor = ir.FunctionType(ir.VoidType(), [pyobject_p])
     printfunc = ir.FunctionType()
     reprfunc = ir.FunctionType(pyobject_p, [pyobject_p])
+    hashfunc = ir.FunctionType(ssize_t, [pyobject_p])
     getattrfunc = ir.FunctionType(pyobject_p, [pyobject_p, char_p])
     getattrofunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p])
     setattrfunc = ir.FunctionType(int8, [pyobject_p, char_p, pyobject_p])
