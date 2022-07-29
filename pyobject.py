@@ -1,4 +1,3 @@
-from operator import mod
 from llvmlite import ir
 
 
