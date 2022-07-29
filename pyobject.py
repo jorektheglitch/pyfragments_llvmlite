@@ -33,9 +33,9 @@ def define_pyobjects_system(module: ir.Module):
         ob_type
     )
     ob_size = size_t
-    ob_base = pyobject
     pyvarobject.set_body(
-        ob_base,
+        ob_refcount,
+        ob_type,
         ob_size
     )
     pybuffer.set_body(
@@ -210,7 +210,9 @@ def define_pyobjects_system(module: ir.Module):
     pygetsetdef_p = pygetsetdef.as_pointer()
 
     pytypeobject.set_body(
-        ob_base,
+        ob_refcount,
+        ob_type,
+        ob_size,
         char_p,               # tp_name
         ssize_t,              # tp_basicsize
         ssize_t,              # tp_itemsize
