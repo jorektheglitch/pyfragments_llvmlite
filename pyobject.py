@@ -329,3 +329,13 @@ def define_PyTypeObject_new(module: ir.Module):
     builder.store(pytypeobject_new_fn.args[11], tp_repr)
     builder.ret(type)
     return pytypeobject_new_fn
+
+
+if __name__ == "__main__":
+    module = ir.Module(__name__)
+    define_pyobjects_system(module)
+    define_PyTypeObject_new(module)
+    llvm_ir = str(module)
+    print(f"Generated LLVM IR:\n\n{llvm_ir}\n")
+    engine = create_execution_engine()
+    mod = compile_ir(engine, llvm_ir)
