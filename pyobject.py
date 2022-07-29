@@ -20,6 +20,75 @@ void_p = int8.as_pointer()
 int32_0 = ir.Constant(int32, 0)
 
 
+PYTYPEOBJECT_FIELD_NAMES = (
+    "ob_refcount",
+    "ob_type",
+    "ob_size",
+    "tp_name",
+    "tp_basicsize",
+    "tp_itemsize",
+
+    # Methods to implement standard operations
+    "tp_dealloc",
+    "tp_vectorcall_offset",
+    "tp_getattr",
+    "tp_setattr",
+    "tp_as_async",
+    "tp_repr",
+
+    # Method suites for standard classes
+    "tp_as_number",
+    "tp_as_sequence",
+    "tp_as_mapping",
+
+    # More standard operations (here for binary compatibility)
+    "tp_hash",
+    "tp_call",
+    "tp_str",
+    "tp_getattro",
+    "tp_setattro",
+
+    # Functions to access object as input/output buffer
+    "tp_as_buffer",
+
+    "tp_flags",
+    "tp_doc",
+    "tp_traverse",
+    "tp_clear",
+    "tp_richcompare",
+    "tp_weaklistoffset",
+
+    "tp_iter",
+    "tp_iternext",
+
+    "tp_methods",
+    "tp_members",
+    "tp_getset",
+    "tp_base",
+    "tp_dict",
+    "tp_descrget",
+    "tp_descrset",
+    "tp_dictoffset",
+    "tp_init",
+    "tp_alloc",
+    "tp_new",
+    "tp_free",  # /* Low-level free-memory routine */
+    "tp_is_gc",  # /* For PyObject_IS_GC */
+    "tp_bases",
+    "tp_mro",  # /* method resolution order */
+    "tp_cache",
+    "tp_subclasses",
+    "tp_weaklist",
+    "tp_del",
+
+    # /* Type attribute cache version tag. Added in version 2.6 */
+    "tp_version_tag",
+
+    "tp_finalize",
+    "tp_vectorcall",
+)
+
+
 def define_pyobjects_system(module: ir.Module):
 
     pyobject = module.context.get_identified_type("PyObject")
