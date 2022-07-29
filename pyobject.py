@@ -1,5 +1,8 @@
 from llvmlite import ir
 
+from llvm_operations import create_execution_engine, compile_ir
+from primitives import allocate, charstring
+
 
 int8 = ir.IntType(8)
 int32 = ir.IntType(32)
@@ -13,6 +16,8 @@ ssize_t_p = ssize_t.as_pointer()
 
 void = ir.VoidType()
 void_p = int8.as_pointer()
+
+int32_0 = ir.Constant(int32, 0)
 
 
 def define_pyobjects_system(module: ir.Module):
@@ -276,3 +281,51 @@ def define_pyobjects_system(module: ir.Module):
         destructor,           # tp_finalize;
         vectorcallfunc,       # tp_vectorcall;
     )
+
+
+def define_PyTypeObject_new(module: ir.Module):
+    pyobject = module.context.get_identified_type("PyObject")
+    pytypeobject = module.context.get_identified_type("PyTypeObject")
+    pyasyncmethods = module.context.get_identified_type("PyAsyncMethods")
+    pyobject_p = pyobject.as_pointer()
+    pytypeobject_p = pytypeobject.as_pointer()
+    pyasyncmethods_p = pyasyncmethods.as_pointer()
+    pytypeobject_new_fnty = ir.FunctionType(
+        pytypeobject_p, (
+            size_t, pytypeobject_p,
+            size_t, char_p,
+            ssize_t, ssize_t,
+            ir.FunctionType(void, [pyobject_p]).as_pointer(),
+            ssize_t,
+            ir.FunctionType(pyobject_p, [pyobject_p, char_p]).as_pointer(),
+            ir.FunctionType(int8, [pyobject_p, char_p, pyobject_p]).as_pointer(),
+            pyasyncmethods_p,
+            ir.FunctionType(pyobject_p, [pyobject_p]).as_pointer()
+        ))
+    pytypeobject_new_fn = ir.Function(module, pytypeobject_new_fnty, name="PyTypeObject_new")
+    block = pytypeobject_new_fn.append_basic_block('entry')
+    builder = ir.IRBuilder(block)
+    type = allocate(pytypeobject, builder, name='newTypeObject')
+    tp_refcount_ptr = builder.gep(type, [int32_0, int32_0], name='tp_refcount_ptr')
+    tp_type_ptr = builder.gep(type, [int32_0, int32(1)], name='tp_type_ptr')
+    tp_size_ptr = builder.gep(type, [int32_0, int32(2)], name='tp_size_ptr')
+    tp_name_ptr = builder.gep(type, [int32_0, int32(3)], name='tp_name_ptr')
+    tp_dealloc_ptr = builder.gep(type, [int32_0, int32(6)], name='tp_dealloc_ptr')
+    tp_vectorcall_offset_ptr = builder.gep(type, [int32_0, int32(7)], name='tp_vectorcall_offset_ptr')
+    tp_getattr_ptr = builder.gep(type, [int32_0, int32(8)], name='tp_getattr_ptr')
+    tp_setattr = builder.gep(type, [int32_0, int32(9)], name='tp_setattr_ptr')
+    tp_as_async = builder.gep(type, [int32_0, int32(10)], name='tp_as_async_ptr')
+    tp_repr = builder.gep(type, [int32_0, int32(11)], name='tp_repr_ptr')
+    # builder.store(pytypeobject_new_fn.args[], )
+    builder.store(pytypeobject_new_fn.args[0], tp_refcount_ptr)
+    builder.store(pytypeobject_new_fn.args[1], tp_type_ptr)
+    builder.store(pytypeobject_new_fn.args[2], tp_size_ptr)
+    builder.store(pytypeobject_new_fn.args[3], tp_name_ptr)
+    builder.store(pytypeobject_new_fn.args[6], tp_dealloc_ptr)
+    builder.store(pytypeobject_new_fn.args[7], tp_vectorcall_offset_ptr)
+    builder.store(pytypeobject_new_fn.args[8], tp_getattr_ptr)
+    builder.store(pytypeobject_new_fn.args[9], tp_setattr)
+    builder.store(pytypeobject_new_fn.args[10], tp_as_async)
+    builder.store(pytypeobject_new_fn.args[11], tp_repr)
+    builder.ret(type)
+    return pytypeobject_new_fn
