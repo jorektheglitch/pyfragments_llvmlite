@@ -370,10 +370,140 @@ def define_PyTypeObject_new(module: ir.Module):
     return pytypeobject_new_fn
 
 
+def define_PyType_Type(module: ir.Module, builder: ir.IRBuilder = None):
+    pyobject = module.context.get_identified_type("PyObject")
+    pytypeobject = module.context.get_identified_type("PyTypeObject")
+    pyobject_p = pyobject.as_pointer()
+    pytypeobject_p = pytypeobject.as_pointer()
+    typetype_name = ir.GlobalVariable(module, ir.ArrayType(char, 5), "PyType_Type__name")
+    typetype_name.initializer = ir.ArrayType(char, 5)([char(116), char(121), char(112), char(101), char(0)])
+    typetype = ir.GlobalVariable(module, pytypeobject, "PyType_Type")
+    typetype.initializer = pytypeobject([
+        ssize_t("null"),
+        typetype.get_reference(),
+        ssize_t("null"),
+        typetype_name.gep([int32(0), int32(0)]),
+        ssize_t("null"),
+        ssize_t("null"),
+        ir.FunctionType(void, [pyobject_p]).as_pointer()("null"),
+        ssize_t("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p, char_p]).as_pointer()("null"),
+        ir.FunctionType(int8, [pyobject_p, char_p, pyobject_p]).as_pointer()("null"),
+        module.context.get_identified_type("PyAsyncMethods").as_pointer()("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p]).as_pointer()("null"),
+        module.context.get_identified_type("PyNumberMethods").as_pointer()("null"),
+        module.context.get_identified_type("PySequenceMethods").as_pointer()("null"),
+        module.context.get_identified_type("PyMappingMethods").as_pointer()("null"),
+        ir.FunctionType(ssize_t, [pyobject_p]).as_pointer()("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p]).as_pointer()("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p]).as_pointer()("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p]).as_pointer()("null"),
+        module.context.get_identified_type("PyBufferProcs").as_pointer()("null"),
+        int32(0),                # tp_flags
+        char_p("null"),               # tp_doc
+        ir.FunctionType(int64, [pyobject_p, ir.FunctionType(int64, [pyobject_p, void_p]).as_pointer(), void_p]).as_pointer()("null"),         # tp_traverse
+        ir.FunctionType(int8, [pyobject_p]).as_pointer()("null"),              # tp_clear
+        ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, int8]).as_pointer()("null"),          # tp_richcompare
+        ssize_t("null"),              # tp_weaklistoffset
+        ir.FunctionType(pyobject_p, [pyobject_p]).as_pointer()("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p]).as_pointer()("null"),
+        module.context.get_identified_type("PyMethodDef").as_pointer()("null"),
+        module.context.get_identified_type("PyMemberDef").as_pointer()("null"),
+        module.context.get_identified_type("PyGetSetDef").as_pointer()("null"),
+        typetype.get_reference(),       # tp_base
+        pyobject_p("null"),           # tp_dict
+        ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()("null"),
+        ssize_t("null"),              # tp_dictoffset
+        ir.FunctionType(int8, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()("null"),             # tp_init
+        ir.FunctionType(pyobject_p, [pytypeobject_p, ssize_t]).as_pointer()("null"),            # tp_alloc
+        ir.FunctionType(pyobject_p, [pytypeobject_p, pyobject_p, pyobject_p]).as_pointer()("null"),              # tp_new
+        ir.FunctionType(void, [void_p]).as_pointer()("null"),
+        ir.FunctionType(int8, [pyobject_p]).as_pointer()("null"),
+        pyobject_p("null"),           # tp_bases;
+        pyobject_p("null"),           # tp_mro; /* method resolution order */
+        pyobject_p("null"),           # tp_cache;
+        pyobject_p("null"),           # tp_subclasses;
+        pyobject_p("null"),           # tp_weaklist;
+        ir.FunctionType(void, [pyobject_p]).as_pointer()("null"),
+        int64(1),                # tp_version_tag;
+        ir.FunctionType(void, [pyobject_p]).as_pointer()("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p.as_pointer(), ssize_t, pyobject_p]).as_pointer()("null"),       # tp_vectorcall;
+    ])
+    return typetype
+
+
+def define_PyBaseObject_Type(module: ir.Module):
+    pyobject = module.context.get_identified_type("PyObject")
+    pytypeobject = module.context.get_identified_type("PyTypeObject")
+    pyobject_p = pyobject.as_pointer()
+    pytypeobject_p = pytypeobject.as_pointer()
+    baseobjecttype_name = ir.GlobalVariable(module, ir.ArrayType(char, 7), "PyBaseObject_Type__name")
+    baseobjecttype_name.initializer = ir.ArrayType(char, 7)([char(111), char(98), char(106), char(101), char(99), char(116), char(0)])
+    baseobjecttype = ir.GlobalVariable(module, pytypeobject, "PyBaseObject_Type")
+    baseobjecttype.initializer = pytypeobject([
+        ssize_t("null"),
+        typetype.get_reference(),
+        ssize_t("null"),
+        baseobjecttype_name.gep([int32(0), int32(0)]),
+        ssize_t("null"),
+        ssize_t("null"),
+        ir.FunctionType(void, [pyobject_p]).as_pointer()("null"),
+        ssize_t("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p, char_p]).as_pointer()("null"),
+        ir.FunctionType(int8, [pyobject_p, char_p, pyobject_p]).as_pointer()("null"),
+        module.context.get_identified_type("PyAsyncMethods").as_pointer()("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p]).as_pointer()("null"),
+        module.context.get_identified_type("PyNumberMethods").as_pointer()("null"),
+        module.context.get_identified_type("PySequenceMethods").as_pointer()("null"),
+        module.context.get_identified_type("PyMappingMethods").as_pointer()("null"),
+        ir.FunctionType(ssize_t, [pyobject_p]).as_pointer()("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p]).as_pointer()("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p]).as_pointer()("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p]).as_pointer()("null"),
+        module.context.get_identified_type("PyBufferProcs").as_pointer()("null"),
+        int32(0),                # tp_flags
+        char_p("null"),               # tp_doc
+        ir.FunctionType(int64, [pyobject_p, ir.FunctionType(int64, [pyobject_p, void_p]).as_pointer(), void_p]).as_pointer()("null"),         # tp_traverse
+        ir.FunctionType(int8, [pyobject_p]).as_pointer()("null"),              # tp_clear
+        ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, int8]).as_pointer()("null"),          # tp_richcompare
+        ssize_t("null"),              # tp_weaklistoffset
+        ir.FunctionType(pyobject_p, [pyobject_p]).as_pointer()("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p]).as_pointer()("null"),
+        module.context.get_identified_type("PyMethodDef").as_pointer()("null"),
+        module.context.get_identified_type("PyMemberDef").as_pointer()("null"),
+        module.context.get_identified_type("PyGetSetDef").as_pointer()("null"),
+        baseobjecttype.get_reference(),       # tp_base
+        pyobject_p("null"),           # tp_dict
+        ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()("null"),
+        ssize_t("null"),              # tp_dictoffset
+        ir.FunctionType(int8, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()("null"),             # tp_init
+        ir.FunctionType(pyobject_p, [pytypeobject_p, ssize_t]).as_pointer()("null"),            # tp_alloc
+        ir.FunctionType(pyobject_p, [pytypeobject_p, pyobject_p, pyobject_p]).as_pointer()("null"),              # tp_new
+        ir.FunctionType(void, [void_p]).as_pointer()("null"),
+        ir.FunctionType(int8, [pyobject_p]).as_pointer()("null"),
+        pyobject_p("null"),           # tp_bases;
+        pyobject_p("null"),           # tp_mro; /* method resolution order */
+        pyobject_p("null"),           # tp_cache;
+        pyobject_p("null"),           # tp_subclasses;
+        pyobject_p("null"),           # tp_weaklist;
+        ir.FunctionType(void, [pyobject_p]).as_pointer()("null"),
+        int64(1),                # tp_version_tag;
+        ir.FunctionType(void, [pyobject_p]).as_pointer()("null"),
+        ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p.as_pointer(), ssize_t, pyobject_p]).as_pointer()("null"),       # tp_vectorcall;
+    ])
+    return baseobjecttype
+
+
 if __name__ == "__main__":
     module = ir.Module(__name__)
     define_pyobjects_system(module)
     define_PyTypeObject_new(module)
+    typetype = define_PyType_Type(module)
+    baseobjtype = define_PyBaseObject_Type(module)
     llvm_ir = str(module)
     print(f"Generated LLVM IR:\n\n{llvm_ir}\n")
     engine = create_execution_engine()
