@@ -571,7 +571,6 @@ def define_PyBaseObject_Type(module: ir.Module):
 if __name__ == "__main__":
     module = ir.Module(__name__)
     define_pyobjects_system(module)
-    define_PyTypeObject_new(module)
     define_PyType_Type(module)
     define_PyBaseObject_Type(module)
     llvm_ir = str(module)
