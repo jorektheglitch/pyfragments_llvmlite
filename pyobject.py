@@ -438,6 +438,29 @@ def global_constant_string(module: ir.Module, name: str, value: str):
 def define_PyType_Type(module: ir.Module, builder: ir.IRBuilder = None):
     pyobject = module.context.get_identified_type("PyObject")
     pytypeobject = module.context.get_identified_type("PyTypeObject")
+    pymemberdef = module.context.get_identified_type("PyMemberDef")
+    members_ty = ir.ArrayType(pymemberdef, 8)
+    members = ir.GlobalVariable(module, members_ty, "PyType_Type__members")
+    members_descr = [
+        ("__basicsize__", T_PYSSIZET, "tp_basicsize", READONLY, None),
+        ("__itemsize__", T_PYSSIZET, "tp_itemsize", READONLY, None),
+        ("__flags__", T_ULONG, "tp_flags", READONLY, None),
+        ("__weakrefoffset__", T_PYSSIZET, "tp_weaklistoffset", READONLY, None),
+        ("__base__", T_OBJECT, "tp_base", READONLY, None),
+        ("__dictoffset__", T_PYSSIZET, "tp_dictoffset", READONLY, None),
+        ("__mro__", T_OBJECT, "tp_mro", READONLY, None)
+    ]
+    members_initializer = []
+    for i, (name, type, field_name, flags, doc) in enumerate(members_descr):
+        name_var = global_constant_string(module, f"PyType_Type__members.{i}", name)
+        name_ptr = name_var.gep([int32(0), int32(0)])
+        field_index = PYTYPEOBJECT_FIELD_NAMES.index(field_name)
+        field_offset = offsetof(pytypeobject, field_index)
+        doc_ptr = doc or char_p("null")
+        member = pymemberdef([name_ptr, type, field_offset, flags, doc_ptr])
+        members_initializer.append(member)
+    members_initializer.append(None)
+    members.initializer = members_ty(members_initializer)
     pyobject_p = pyobject.as_pointer()
     pytypeobject_p = pytypeobject.as_pointer()
     typetype_name = ir.GlobalVariable(module, ir.ArrayType(char, 5), "PyType_Type__name")
@@ -474,7 +497,7 @@ def define_PyType_Type(module: ir.Module, builder: ir.IRBuilder = None):
         ir.FunctionType(pyobject_p, [pyobject_p]).as_pointer()("null"),
         ir.FunctionType(pyobject_p, [pyobject_p]).as_pointer()("null"),
         module.context.get_identified_type("PyMethodDef").as_pointer()("null"),
-        module.context.get_identified_type("PyMemberDef").as_pointer()("null"),
+        members.gep([int32(0), int32(0)]),
         module.context.get_identified_type("PyGetSetDef").as_pointer()("null"),
         typetype.get_reference(),       # tp_base
         pyobject_p("null"),           # tp_dict
