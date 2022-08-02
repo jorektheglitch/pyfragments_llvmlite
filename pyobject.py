@@ -388,24 +388,6 @@ def define_pyobjects_system(module: ir.Module):
     )
 
 
-def define_PyTypeObject_new(module: ir.Module):
-    pytypeobject = module.context.get_identified_type("PyTypeObject")
-    pytypeobject_p = pytypeobject.as_pointer()
-    pytypeobject_new_fnty = ir.FunctionType(pytypeobject_p, pytypeobject.elements)
-    pytypeobject_new_fn = ir.Function(module, pytypeobject_new_fnty, name="PyTypeObject_new")
-    block = pytypeobject_new_fn.append_basic_block('entry')
-    builder = ir.IRBuilder(block)
-    type = allocate(pytypeobject, builder, name='newTypeObject')
-    type_fields = [
-        builder.gep(type, [int32_0, int32(i)], name=f'{field_name}_ptr')
-        for i, field_name in enumerate(PYTYPEOBJECT_FIELD_NAMES)
-    ]
-    for i, type_field in enumerate(type_fields):
-        builder.store(pytypeobject_new_fn.args[i], type_field)
-    builder.ret(type)
-    return pytypeobject_new_fn
-
-
 def sizeof(type: ir.Type, builder: ir.IRBuilder):
     """
         `%Size = getelementptr %T* null, i32 1`
