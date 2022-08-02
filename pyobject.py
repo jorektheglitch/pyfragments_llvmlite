@@ -563,7 +563,7 @@ def define_PyBaseObject_Type(module: ir.Module):
         module.context.get_identified_type("PyMethodDef").as_pointer()("null"),
         module.context.get_identified_type("PyMemberDef").as_pointer()("null"),
         module.context.get_identified_type("PyGetSetDef").as_pointer()("null"),
-        baseobjecttype.get_reference(),       # tp_base
+        pytypeobject_p("null"),       # tp_base
         pyobject_p("null"),           # tp_dict
         ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()("null"),
         ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()("null"),
