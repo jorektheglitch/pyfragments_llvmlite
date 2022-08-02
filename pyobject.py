@@ -451,26 +451,25 @@ def define_PyType_Type(module: ir.Module, builder: ir.IRBuilder = None):
         ("__mro__", T_OBJECT, "tp_mro", READONLY, None)
     ]
     members_initializer = []
-    for i, (name, type, field_name, flags, doc) in enumerate(members_descr):
+    for i, (name, m_type, field_name, flags, doc) in enumerate(members_descr):
         name_var = global_constant_string(module, f"PyType_Type__members.{i}", name)
         name_ptr = name_var.gep([int32(0), int32(0)])
         field_index = PYTYPEOBJECT_FIELD_NAMES.index(field_name)
         field_offset = offsetof(pytypeobject, field_index)
         doc_ptr = doc or char_p("null")
-        member = pymemberdef([name_ptr, type, field_offset, flags, doc_ptr])
+        member = pymemberdef([name_ptr, m_type, field_offset, flags, doc_ptr])
         members_initializer.append(member)
     members_initializer.append(None)
     members.initializer = members_ty(members_initializer)
     pyobject_p = pyobject.as_pointer()
     pytypeobject_p = pytypeobject.as_pointer()
-    typetype_name = ir.GlobalVariable(module, ir.ArrayType(char, 5), "PyType_Type__name")
-    typetype_name.initializer = ir.ArrayType(char, 5)([char(116), char(121), char(112), char(101), char(0)])
-    typetype = ir.GlobalVariable(module, pytypeobject, "PyType_Type")
-    typetype.initializer = pytypeobject([
+    type_name = global_constant_string(module, "PyType_Type__name", "type")
+    type = ir.GlobalVariable(module, pytypeobject, "PyType_Type")
+    type.initializer = pytypeobject([
         ssize_t("null"),
-        typetype.get_reference(),
+        type.get_reference(),
         ssize_t("null"),
-        typetype_name.gep([int32(0), int32(0)]),
+        type_name.gep([int32(0), int32(0)]),
         ssize_t("null"),
         ssize_t("null"),
         ir.FunctionType(void, [pyobject_p]).as_pointer()("null"),
@@ -519,22 +518,22 @@ def define_PyType_Type(module: ir.Module, builder: ir.IRBuilder = None):
         ir.FunctionType(void, [pyobject_p]).as_pointer()("null"),
         ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p.as_pointer(), ssize_t, pyobject_p]).as_pointer()("null"),       # tp_vectorcall;
     ])
-    return typetype
+    return type
 
 
 def define_PyBaseObject_Type(module: ir.Module):
     pyobject = module.context.get_identified_type("PyObject")
     pytypeobject = module.context.get_identified_type("PyTypeObject")
+    typetype = module.get_global("PyType_Type")
     pyobject_p = pyobject.as_pointer()
     pytypeobject_p = pytypeobject.as_pointer()
-    baseobjecttype_name = ir.GlobalVariable(module, ir.ArrayType(char, 7), "PyBaseObject_Type__name")
-    baseobjecttype_name.initializer = ir.ArrayType(char, 7)([char(111), char(98), char(106), char(101), char(99), char(116), char(0)])
-    baseobjecttype = ir.GlobalVariable(module, pytypeobject, "PyBaseObject_Type")
-    baseobjecttype.initializer = pytypeobject([
+    objecttype_name = global_constant_string(module, "PyBaseObject_Type__name", "object")
+    objecttype = ir.GlobalVariable(module, pytypeobject, "PyBaseObject_Type")
+    objecttype.initializer = pytypeobject([
         ssize_t("null"),
         typetype.get_reference(),
         ssize_t("null"),
-        baseobjecttype_name.gep([int32(0), int32(0)]),
+        objecttype_name.gep([int32(0), int32(0)]),
         ssize_t("null"),
         ssize_t("null"),
         ir.FunctionType(void, [pyobject_p]).as_pointer()("null"),
@@ -583,15 +582,15 @@ def define_PyBaseObject_Type(module: ir.Module):
         ir.FunctionType(void, [pyobject_p]).as_pointer()("null"),
         ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p.as_pointer(), ssize_t, pyobject_p]).as_pointer()("null"),       # tp_vectorcall;
     ])
-    return baseobjecttype
+    return objecttype
 
 
 if __name__ == "__main__":
     module = ir.Module(__name__)
     define_pyobjects_system(module)
     define_PyTypeObject_new(module)
-    typetype = define_PyType_Type(module)
-    baseobjtype = define_PyBaseObject_Type(module)
+    define_PyType_Type(module)
+    define_PyBaseObject_Type(module)
     llvm_ir = str(module)
     print(f"Generated LLVM IR:\n\n{llvm_ir}\n")
     engine = create_execution_engine()
