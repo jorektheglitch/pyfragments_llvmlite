@@ -577,3 +577,4 @@ if __name__ == "__main__":
     print(f"Generated LLVM IR:\n\n{llvm_ir}\n")
     engine = create_execution_engine()
     mod = compile_ir(engine, llvm_ir)
+    print()
