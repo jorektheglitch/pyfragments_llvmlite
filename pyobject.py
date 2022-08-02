@@ -19,6 +19,41 @@ void_p = int8.as_pointer()
 
 int32_0 = ir.Constant(int32, 0)
 
+T_SHORT = int8(0)
+T_INT = int8(1)
+T_LONG = int8(2)
+T_FLOAT = int8(3)
+T_DOUBLE = int8(4)
+T_STRING = int8(5)
+T_OBJECT = int8(6)
+# XXX the ordering here is weird for binary compatibility
+T_CHAR = int8(7)   # 1-character string
+T_BYTE = int8(8)   # 8-bit signed int
+# unsigned variants:
+T_UBYTE = int8(9)
+T_USHORT = int8(10)
+T_UINT = int8(11)
+T_ULONG = int8(12)
+
+# Added by Jack: strings contained in the structure
+T_STRING_INPLACE = int8(13)
+
+# Added by Lillo: bools contained in the structure (assumed char)
+T_BOOL = int8(14)
+
+T_OBJECT_EX = int8(16)  # Like T_OBJECT, but raises AttributeError when the value is NULL, instead of converting to None.
+T_LONGLONG = int8(17)
+T_ULONGLONG = int8(18)
+
+T_PYSSIZET = int8(19)   # Py_ssize_t
+T_NONE = int8(20)       # Value is always None
+
+
+READONLY = int8(1)
+READ_RESTRICTED = int8(2)
+PY_WRITE_RESTRICTED = int8(4)
+RESTRICTED = READ_RESTRICTED.or_(PY_WRITE_RESTRICTED)
+
 
 PYTYPEOBJECT_FIELD_NAMES = (
     "ob_refcount",
