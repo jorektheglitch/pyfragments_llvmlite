@@ -230,7 +230,7 @@ def define_pyobjects_system(module: ir.Module):
         binaryfunc,   # nb_xor;
         binaryfunc,   # nb_or;
         unaryfunc,    # nb_int;
-        
+
         void_p,       # nb_reserved;  /* the slot formerly known as nb_long */
         unaryfunc,    # nb_float;
 
@@ -314,7 +314,7 @@ def define_pyobjects_system(module: ir.Module):
         getter,  # get
         setter,  # set
         char_p,  # doc
-        void_p,  # closure - optional function pointer 
+        void_p,  # closure - optional function pointer
     )
     pygetsetdef_p = pygetsetdef.as_pointer()
 
@@ -343,7 +343,7 @@ def define_pyobjects_system(module: ir.Module):
         hashfunc,             # tp_hash
         ternaryfunc,          # tp_call
         reprfunc,             # tp_str
-        getattrofunc,         # tp_getattro 
+        getattrofunc,         # tp_getattro
         setattrofunc,         # tp_setattro
 
         # Functions to access object as input/output buffer
