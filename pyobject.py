@@ -370,6 +370,36 @@ def define_PyTypeObject_new(module: ir.Module):
     return pytypeobject_new_fn
 
 
+def sizeof(type: ir.Type, builder: ir.IRBuilder):
+    """
+        `%Size = getelementptr %T* null, i32 1`
+
+        This code is effectively pretending that there is an array of `T`
+        elements, starting at the `null` pointer. This gets a pointer to the
+        2nd `T` element (element #1) in the array and treats it as an integer.
+        This computes the size of one `T` element.
+    """
+    return builder.gep(type.as_pointer()("null"), [int32(1)])
+
+
+def offsetof(type: ir.Aggregate, index: int, ptrtype=ssize_t):
+    element_ty = type.gep(int32(index))
+    element_ty_repr = element_ty._to_string()
+    return f"bitcast ({element_ty_repr}* getelementptr ({type._to_string()}, {type.as_pointer()('null')}, i32 0, i32 {index}) to {ptrtype})"
+
+
+def global_constant_string(module: ir.Module, name: str, value: str):
+    encoded = value.encode()
+    array_ty = ir.ArrayType(int8, len(encoded)+1)
+    global_variable = ir.GlobalVariable(module, array_ty, name)
+    elements = [int8(n) for n in encoded]
+    elements.append(int8(0))
+    initializer = array_ty(elements)
+    global_variable.initializer = initializer
+    global_variable.global_constant = True
+    return global_variable
+
+
 def define_PyType_Type(module: ir.Module, builder: ir.IRBuilder = None):
     pyobject = module.context.get_identified_type("PyObject")
     pytypeobject = module.context.get_identified_type("PyTypeObject")
