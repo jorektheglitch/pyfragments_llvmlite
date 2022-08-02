@@ -499,7 +499,7 @@ def define_PyType_Type(module: ir.Module, builder: ir.IRBuilder = None):
         module.context.get_identified_type("PyMethodDef").as_pointer()("null"),
         members.gep([int32(0), int32(0)]),
         module.context.get_identified_type("PyGetSetDef").as_pointer()("null"),
-        typetype.get_reference(),       # tp_base
+        pytypeobject_p("null"),       # tp_base
         pyobject_p("null"),           # tp_dict
         ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()("null"),
         ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()("null"),
