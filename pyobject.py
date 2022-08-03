@@ -2,6 +2,7 @@ from llvmlite import ir
 
 from llvm_operations import create_execution_engine, compile_ir
 from primitives import allocate, charstring
+from typedefs import TypeTable
 
 
 int8 = ir.IntType(8)
@@ -133,7 +134,8 @@ def define_pyobjects_system(module: ir.Module):
 
     pyobject_p = pyobject.as_pointer()
     pytypeobject_p = pytypeobject.as_pointer()
-    pybuffer_p = pybuffer.as_pointer()
+
+    types = TypeTable(pyobject, pytypeobject, pybuffer)
 
     ob_refcount = ssize_t
     ob_type = pytypeobject.as_pointer()
@@ -162,136 +164,96 @@ def define_pyobjects_system(module: ir.Module):
         void_p,      # internal
     )
 
-    unaryfunc = ir.FunctionType(pyobject_p, [pyobject_p]).as_pointer()
-    binaryfunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p]).as_pointer()
-    ternaryfunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()
-    ssizeargfunc = ir.FunctionType(pyobject_p, [pyobject_p, ssize_t]).as_pointer()
-    ssizeobjargproc = ir.FunctionType(int64, [pyobject_p, ssize_t]).as_pointer()
-    objobjproc = ir.FunctionType(int64, [pyobject_p, pyobject_p]).as_pointer()
-    objobjargproc = ir.FunctionType(int64, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()
-    pyobj_function = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p]).as_pointer()
-    sendfunc_result = int8  # one of 0 (Return), -1 (Error), 1 (Next)
-    sendfunc = ir.FunctionType(sendfunc_result, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()
-    inqury_result = int8
-    inquiry = ir.FunctionType(inqury_result, [pyobject_p]).as_pointer()
-    destructor = ir.FunctionType(void, [pyobject_p]).as_pointer()
-    reprfunc = ir.FunctionType(pyobject_p, [pyobject_p]).as_pointer()
-    hashfunc = ir.FunctionType(ssize_t, [pyobject_p]).as_pointer()
-    getattrfunc = ir.FunctionType(pyobject_p, [pyobject_p, char_p]).as_pointer()
-    getattrofunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p]).as_pointer()
-    setattrfunc = ir.FunctionType(int8, [pyobject_p, char_p, pyobject_p]).as_pointer()
-    setattrofunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p]).as_pointer()
-    getter = ir.FunctionType(pyobject_p, [pyobject_p, void_p]).as_pointer()
-    setter = ir.FunctionType(int8, [pyobject_p, pyobject_p, void_p]).as_pointer()
-    visitproc = ir.FunctionType(int64, [pyobject_p, void_p]).as_pointer()
-    traverseproc = ir.FunctionType(int64, [pyobject_p, visitproc, void_p]).as_pointer()
-    richcmpfunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, int8]).as_pointer()
-    getiterfunc = ir.FunctionType(pyobject_p, [pyobject_p]).as_pointer()
-    iternextfunc = ir.FunctionType(pyobject_p, [pyobject_p]).as_pointer()
-    lenfunc = ir.FunctionType(ssize_t, [pyobject_p]).as_pointer()
-    descrgetfunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()
-    descrsetfunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()
-    initproc = ir.FunctionType(int8, [pyobject_p, pyobject_p, pyobject_p]).as_pointer()  # return 0 if ok -1 if exception
-    allocfunc = ir.FunctionType(pyobject_p, [pytypeobject_p, ssize_t]).as_pointer()
-    newfunc = ir.FunctionType(pyobject_p, [pytypeobject_p, pyobject_p, pyobject_p]).as_pointer()
-    freefunc = ir.FunctionType(void, [void_p]).as_pointer()
-
-    pyobject_p_arr_p = pyobject_p.as_pointer()
-    vectorcallfunc = ir.FunctionType(pyobject_p, [pyobject_p, pyobject_p_arr_p, ssize_t, pyobject_p]).as_pointer()
-
-    getbufferproc = ir.FunctionType(int8, [pyobject_p, pybuffer_p, int8]).as_pointer()
-    releasebufferproc = ir.FunctionType(void, [pyobject_p, pybuffer_p]).as_pointer()
-
     pyasyncmethods = module.context.get_identified_type("PyAsyncMethods")
     pyasyncmethods.set_body(
-        unaryfunc,  # am_await
-        unaryfunc,  # am_aiter
-        unaryfunc,  # am_anext
-        sendfunc,   # am_send
+        types.unaryfunc_p,  # am_await
+        types.unaryfunc_p,  # am_aiter
+        types.unaryfunc_p,  # am_anext
+        types.sendfunc_p,   # am_send
     )
     pyasyncmethods_p = pyasyncmethods.as_pointer()
 
     pynumbermethods = module.context.get_identified_type("PyNumberMethods")
     pynumbermethods.set_body(
-        binaryfunc,   # nb_add
-        binaryfunc,   # nb_subtract
-        binaryfunc,   # nb_multiply
-        binaryfunc,   # nb_remainder
-        binaryfunc,   # nb_divmod
-        ternaryfunc,  # nb_power
-        unaryfunc,    # nb_negative
-        unaryfunc,    # nb_positive
-        unaryfunc,    # nb_absolute
-        inquiry,      # nb_bool
-        unaryfunc,    # nb_invert
-        binaryfunc,   # nb_lshift
-        binaryfunc,   # nb_rshift
-        binaryfunc,   # nb_and
-        binaryfunc,   # nb_xor
-        binaryfunc,   # nb_or
-        unaryfunc,    # nb_int
+        types.binaryfunc_p,   # nb_add
+        types.binaryfunc_p,   # nb_subtract
+        types.binaryfunc_p,   # nb_multiply
+        types.binaryfunc_p,   # nb_remainder
+        types.binaryfunc_p,   # nb_divmod
+        types.ternaryfunc_p,  # nb_power
+        types.unaryfunc_p,    # nb_negative
+        types.unaryfunc_p,    # nb_positive
+        types.unaryfunc_p,    # nb_absolute
+        types.inquiry_p,      # nb_bool
+        types.unaryfunc_p,    # nb_invert
+        types.binaryfunc_p,   # nb_lshift
+        types.binaryfunc_p,   # nb_rshift
+        types.binaryfunc_p,   # nb_and
+        types.binaryfunc_p,   # nb_xor
+        types.binaryfunc_p,   # nb_or
+        types.unaryfunc_p,    # nb_int
 
         void_p,       # nb_reserved  the slot formerly known as nb_long
-        unaryfunc,    # nb_float
+        types.unaryfunc_p,    # nb_float
 
-        binaryfunc,   # nb_inplace_add
-        binaryfunc,   # nb_inplace_subtract
-        binaryfunc,   # nb_inplace_multiply
-        binaryfunc,   # nb_inplace_remainder
-        ternaryfunc,  # nb_inplace_power
-        binaryfunc,   # nb_inplace_lshift
-        binaryfunc,   # nb_inplace_rshift
-        binaryfunc,   # nb_inplace_and
-        binaryfunc,   # nb_inplace_xor
-        binaryfunc,   # nb_inplace_or
+        types.binaryfunc_p,   # nb_inplace_add
+        types.binaryfunc_p,   # nb_inplace_subtract
+        types.binaryfunc_p,   # nb_inplace_multiply
+        types.binaryfunc_p,   # nb_inplace_remainder
+        types.ternaryfunc_p,  # nb_inplace_power
+        types.binaryfunc_p,   # nb_inplace_lshift
+        types.binaryfunc_p,   # nb_inplace_rshift
+        types.binaryfunc_p,   # nb_inplace_and
+        types.binaryfunc_p,   # nb_inplace_xor
+        types.binaryfunc_p,   # nb_inplace_or
 
-        binaryfunc,   # nb_floor_divide
-        binaryfunc,   # nb_true_divide
-        binaryfunc,   # nb_inplace_floor_divide
-        binaryfunc,   # nb_inplace_true_divide
+        types.binaryfunc_p,   # nb_floor_divide
+        types.binaryfunc_p,   # nb_true_divide
+        types.binaryfunc_p,   # nb_inplace_floor_divide
+        types.binaryfunc_p,   # nb_inplace_true_divide
 
-        unaryfunc,    # nb_index
+        types.unaryfunc_p,    # nb_index
 
-        binaryfunc,   # nb_matrix_multiply
-        binaryfunc,   # nb_inplace_matrix_multiply
+        types.binaryfunc_p,   # nb_matrix_multiply
+        types.binaryfunc_p,   # nb_inplace_matrix_multiply
     )
     pynumbermethods_p = pynumbermethods.as_pointer()
 
     pysequencemethods = module.context.get_identified_type("PySequenceMethods")
     pysequencemethods.set_body(
-        lenfunc,          # sq_length
-        binaryfunc,       # sq_concat
-        ssizeargfunc,     # sq_repeat
-        ssizeargfunc,     # sq_item
+        types.lenfunc_p,          # sq_length
+        types.binaryfunc_p,       # sq_concat
+        types.ssizeargfunc_p,     # sq_repeat
+        types.ssizeargfunc_p,     # sq_item
         void_p,           # was_sq_slice
-        ssizeobjargproc,  # sq_ass_item
+        types.ssizeobjargproc_p,  # sq_ass_item
         void_p,           # was_sq_ass_slice
-        objobjproc,       # sq_contains
+        types.objobjproc_p,       # sq_contains
 
-        binaryfunc,       # sq_inplace_concat
-        ssizeargfunc,     # sq_inplace_repeat
+        types.binaryfunc_p,       # sq_inplace_concat
+        types.ssizeargfunc_p,     # sq_inplace_repeat
     )
     pysequencemethods_p = pysequencemethods.as_pointer()
 
     pymappingmethods = module.context.get_identified_type("PyMappingMethods")
     pymappingmethods.set_body(
-        lenfunc,        # mp_length
-        binaryfunc,     # mp_subscript
-        objobjargproc,  # mp_ass_subscript
+        types.lenfunc_p,        # mp_length
+        types.binaryfunc_p,     # mp_subscript
+        types.objobjargproc_p,  # mp_ass_subscript
     )
     pymappingmethods_p = pymappingmethods.as_pointer()
 
     pybufferprocs = module.context.get_identified_type("PyBufferProcs")
     pybufferprocs.set_body(
-        getbufferproc,      # bf_getbuffer
-        releasebufferproc,  # bf_releasebuffer
+        types.getbufferproc_p,      # bf_getbuffer
+        types.releasebufferproc_p,  # bf_releasebuffer
     )
     pybufferprocs_p = pybufferprocs.as_pointer()
 
     pymethoddef = module.context.get_identified_type("PyMethodDef")
     pymethoddef.set_body(
         char_p,          # ml_name   The name of the built-in function/method
-        pyobj_function,  # ml_meth   The C function that implements it
+        types.pyobj_function_p,  # ml_meth   The C function that implements it
         int8,            # ml_flags  Combination of METH_xxx flags, which
                          #             mostly describe the args expected by
                          #             the C func
@@ -312,8 +274,8 @@ def define_pyobjects_system(module: ir.Module):
     pygetsetdef = module.context.get_identified_type("PyGetSetDef")
     pygetsetdef.set_body(
         char_p,  # name
-        getter,  # get
-        setter,  # set
+        types.getter_p,  # get
+        types.setter_p,  # set
         char_p,  # doc
         void_p,  # closure - optional function pointer
     )
@@ -328,12 +290,12 @@ def define_pyobjects_system(module: ir.Module):
         ssize_t,              # tp_itemsize
 
         # Methods to implement standard operations
-        destructor,           # tp_dealloc
+        types.destructor_p,           # tp_dealloc
         ssize_t,              # tp_vectorcall_offset
-        getattrfunc,          # tp_getattr
-        setattrfunc,          # tp_setattr
+        types.getattrfunc_p,          # tp_getattr
+        types.setattrfunc_p,          # tp_setattr
         pyasyncmethods_p,     # tp_as_async
-        reprfunc,             # tp_repr
+        types.reprfunc_p,             # tp_repr
 
         # Method suites for standard classes
         pynumbermethods_p,    # tp_as_number
@@ -341,50 +303,50 @@ def define_pyobjects_system(module: ir.Module):
         pymappingmethods_p,   # tp_as_mapping
 
         # More standard operations (here for binary compatibility)
-        hashfunc,             # tp_hash
-        ternaryfunc,          # tp_call
-        reprfunc,             # tp_str
-        getattrofunc,         # tp_getattro
-        setattrofunc,         # tp_setattro
+        types.hashfunc_p,             # tp_hash
+        types.ternaryfunc_p,          # tp_call
+        types.reprfunc_p,             # tp_str
+        types.getattrofunc_p,         # tp_getattro
+        types.setattrofunc_p,         # tp_setattro
 
         # Functions to access object as input/output buffer
         pybufferprocs_p,      # tp_as_buffer
 
         int32,                # tp_flags
         char_p,               # tp_doc
-        traverseproc,         # tp_traverse
-        inquiry,              # tp_clear
-        richcmpfunc,          # tp_richcompare
+        types.traverseproc_p,         # tp_traverse
+        types.inquiry_p,              # tp_clear
+        types.richcmpfunc_p,          # tp_richcompare
         ssize_t,              # tp_weaklistoffset
 
-        getiterfunc,          # tp_iter
-        iternextfunc,         # tp_iternext
+        types.getiterfunc_p,          # tp_iter
+        types.iternextfunc_p,         # tp_iternext
 
         pymethoddef_p,        # tp_methods
         pymemberdef_p,        # tp_members
         pygetsetdef_p,        # tp_getset
         pytypeobject_p,       # tp_base
         pyobject_p,           # tp_dict
-        descrgetfunc,         # tp_descrget
-        descrsetfunc,         # tp_descrset
+        types.descrgetfunc_p,         # tp_descrget
+        types.descrsetfunc_p,         # tp_descrset
         ssize_t,              # tp_dictoffset
-        initproc,             # tp_init
-        allocfunc,            # tp_alloc
-        newfunc,              # tp_new
-        freefunc,             # tp_free  Low-level free-memory routine
-        inquiry,              # tp_is_gc  For PyObject_IS_GC
+        types.initproc_p,             # tp_init
+        types.allocfunc_p,            # tp_alloc
+        types.newfunc_p,              # tp_new
+        types.freefunc_p,             # tp_free  Low-level free-memory routine
+        types.inquiry_p,              # tp_is_gc  For PyObject_IS_GC
         pyobject_p,           # tp_bases
         pyobject_p,           # tp_mro  method resolution order
         pyobject_p,           # tp_cache
         pyobject_p,           # tp_subclasses
         pyobject_p,           # tp_weaklist
-        destructor,           # tp_del
+        types.destructor_p,           # tp_del
 
         # Type attribute cache version tag. Added in version 2.6
         int64,                # tp_version_tag
 
-        destructor,           # tp_finalize
-        vectorcallfunc,       # tp_vectorcall
+        types.destructor_p,           # tp_finalize
+        types.vectorcallfunc_p,       # tp_vectorcall
     )
 
 
